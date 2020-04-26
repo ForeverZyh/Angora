@@ -866,6 +866,19 @@ bool AngoraLLVMPass::runOnModule(Module &M) {
   if (DFSanMode)
     return true;
 
+  auto &funcs = M->getFunctionList();
+  Function *insertFunc = NULL;
+  for (auto &func : funcs)
+  {
+    if (func.getName().contains("get_dx")) // get the function by name.
+      insertFunc = &func;
+  }
+  if (insertFunc == NULL)
+  {
+    errs() << "insert function does not find!\n";
+
+  }
+
   for (auto &F : M) {
     if (F.isDeclaration() || F.getName().startswith(StringRef("asan.module")))
       continue;
@@ -883,6 +896,68 @@ bool AngoraLLVMPass::runOnModule(Module &M) {
       for (auto inst = BB->begin(); inst != BB->end(); inst++) {
         Instruction *Inst = &(*inst);
         inst_list.push_back(Inst);
+      }
+
+      // To find the only one compare operation.
+      // Loop over all instructions in the block.
+      Value *OpArg[2];
+      OpArg[0] = OpArg[1] = NULL;
+      for (auto Inst = BB.begin(), IE = BB.end(); Inst != IE; ++Inst) {
+        auto *CmpOp = dyn_cast<CmpInst>(Inst);
+        if (!CmpOp) // if it is a cmp instruction.
+          continue;
+        OpArg[0] = CmpOp->getOperand(0);
+        OpArg[1] = CmpOp->getOperand(1);
+        break; // break, because only one cmp instruction in a BB.
+      }
+      if (OpArg[0] != NULL) // if there is a cmp instruction.
+      {
+        CallInst *lastInst = NULL;
+        Value *GradInstArg[2];
+        Type *i32_type = llvm::IntegerType::getInt32Ty(BB.getContext());
+        Constant *i32_val = llvm::ConstantInt::get(i32_type, 0, true);
+        GradInstArg[0] = GradInstArg[1] = i32_val;
+        // Loop over all instructions in the block.
+        for (auto Inst = BB.begin(), IE = BB.end(); Inst != IE; ++Inst) {
+          auto *CallOp = dyn_cast<CallInst>(Inst);
+          if (!CallOp) // if it is a call instruction.
+            continue;
+          Function *fn = CallOp->getCalledFunction();
+          int argCount = 0;
+          for (auto arg = fn->arg_begin(); arg != fn->arg_end(); ++arg) {
+            argCount++;
+          }
+          if (argCount == 1) // if the function has only one argument.
+          {
+            auto arg = CallOp->getOperand(0);
+            auto ty = fn->arg_begin()->getType();
+            if (ty->isPointerTy()) // if PointerType
+            {
+              auto *pointerTy = dyn_cast<PointerType>(ty);
+              auto *point2Ty = pointerTy->getElementType();
+              if (point2Ty->isStructTy()) // if point to a struct.
+              {
+                auto *structTy = dyn_cast<StructType>(point2Ty);
+                if (structTy->getName().equals("class.Int")) // if the struct name is Int.
+                {
+                  // errs() << CallOp << "\n";
+                  if (OpArg[0] == CallOp || OpArg[1] == CallOp) // if matches one of the cmp arg id.
+                  {
+                    int arg_id = OpArg[1] == CallOp;
+                    IRBuilder<> IRB(CallOp);
+                    Type *i32_type = llvm::IntegerType::getInt32Ty(BB.getContext());
+                    Constant *i32_val = llvm::ConstantInt::get(i32_type, arg_id, true);
+                    CallInst *GradCall = IRB.CreateCall(insertFunc, {arg, i32_val}); // insert a function call.
+                    setInsNonSan(GradCall);
+                    lastInst = GradCall;
+                    GradInstArg[arg_id] = GradCall;
+                  }
+                }
+              }
+            }
+          }
+        }
+        // TODO: Insert a proxy call after the lastInst to send GradInstArg[0..1] to rs
       }
 
       for (auto inst = inst_list.begin(); inst != inst_list.end(); inst++) {
