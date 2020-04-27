@@ -866,7 +866,7 @@ bool AngoraLLVMPass::runOnModule(Module &M) {
   if (DFSanMode)
     return true;
 
-  auto &funcs = M->getFunctionList();
+  auto &funcs = M.getFunctionList();
   Function *insertFunc = NULL;
   for (auto &func : funcs)
   {
@@ -876,7 +876,6 @@ bool AngoraLLVMPass::runOnModule(Module &M) {
   if (insertFunc == NULL)
   {
     errs() << "insert function does not find!\n";
-
   }
 
   for (auto &F : M) {
@@ -902,7 +901,7 @@ bool AngoraLLVMPass::runOnModule(Module &M) {
       // Loop over all instructions in the block.
       Value *OpArg[2];
       OpArg[0] = OpArg[1] = NULL;
-      for (auto Inst = BB.begin(), IE = BB.end(); Inst != IE; ++Inst) {
+      for (auto Inst = BB->begin(), IE = BB->end(); Inst != IE; ++Inst) {
         auto *CmpOp = dyn_cast<CmpInst>(Inst);
         if (!CmpOp) // if it is a cmp instruction.
           continue;
@@ -910,15 +909,16 @@ bool AngoraLLVMPass::runOnModule(Module &M) {
         OpArg[1] = CmpOp->getOperand(1);
         break; // break, because only one cmp instruction in a BB.
       }
-      if (OpArg[0] != NULL) // if there is a cmp instruction.
+      if (OpArg[0] != NULL && insertFunc != NULL) 
+      // if there is a cmp instruction and we find the insert function.
       {
         CallInst *lastInst = NULL;
         Value *GradInstArg[2];
-        Type *i32_type = llvm::IntegerType::getInt32Ty(BB.getContext());
+        Type *i32_type = llvm::IntegerType::getInt32Ty(BB->getContext());
         Constant *i32_val = llvm::ConstantInt::get(i32_type, 0, true);
         GradInstArg[0] = GradInstArg[1] = i32_val;
         // Loop over all instructions in the block.
-        for (auto Inst = BB.begin(), IE = BB.end(); Inst != IE; ++Inst) {
+        for (auto Inst = BB->begin(), IE = BB->end(); Inst != IE; ++Inst) {
           auto *CallOp = dyn_cast<CallInst>(Inst);
           if (!CallOp) // if it is a call instruction.
             continue;
@@ -945,7 +945,7 @@ bool AngoraLLVMPass::runOnModule(Module &M) {
                   {
                     int arg_id = OpArg[1] == CallOp;
                     IRBuilder<> IRB(CallOp);
-                    Type *i32_type = llvm::IntegerType::getInt32Ty(BB.getContext());
+                    Type *i32_type = llvm::IntegerType::getInt32Ty(BB->getContext());
                     Constant *i32_val = llvm::ConstantInt::get(i32_type, arg_id, true);
                     CallInst *GradCall = IRB.CreateCall(insertFunc, {arg, i32_val}); // insert a function call.
                     setInsNonSan(GradCall);
