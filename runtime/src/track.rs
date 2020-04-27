@@ -35,6 +35,8 @@ pub extern "C" fn __angora_trace_cmp_tt(
     _e: u64,
     _f: u64,
     _g: u32,
+    _h: i32,
+    _i: i32,
 ) {
     panic!("Forbid calling __angora_trace_cmp_tt directly");
 }
@@ -48,6 +50,8 @@ pub extern "C" fn __dfsw___angora_trace_cmp_tt(
     arg1: u64,
     arg2: u64,
     condition: u32,
+    grad1: i32,
+    grad2: i32,
     _l0: DfsanLabel,
     _l1: DfsanLabel,
     _l2: DfsanLabel,
@@ -68,7 +72,7 @@ pub extern "C" fn __dfsw___angora_trace_cmp_tt(
     infer_shape(lb1, size);
     infer_shape(lb2, size);
 
-    log_cmp(cmpid, context, condition, op, size, lb1, lb2, arg1, arg2);
+    log_cmp(cmpid, context, condition, op, size, lb1, lb2, arg1, arg2, grad1, grad2);
 }
 
 #[no_mangle]
@@ -124,6 +128,9 @@ pub extern "C" fn __dfsw___angora_trace_switch_tt(
         lb2: 0,
         arg1: condition,
         arg2: 0,
+
+        grad1: 0,
+        grad2: 0,
     };
 
     let sw_args = unsafe { slice::from_raw_parts(args, num as usize) };
@@ -195,6 +202,9 @@ pub extern "C" fn __dfsw___angora_trace_fn_tt(
         lb2: 0,
         arg1: 0,
         arg2: 0,
+
+        grad1: 0,
+        grad2: 0,
     };
 
     if lb1 > 0 {
@@ -240,7 +250,7 @@ pub extern "C" fn __dfsw___angora_trace_exploit_val_tt(
         return;
     }
 
-    log_cmp(cmpid, context, defs::COND_FALSE_ST, op, size, lb, 0, val, 0);
+    log_cmp(cmpid, context, defs::COND_FALSE_ST, op, size, lb, 0, val, 0, 0, 0);
 }
 
 #[inline]
@@ -254,6 +264,8 @@ fn log_cmp(
     lb2: u32,
     arg1: u64,
     arg2: u64,
+    grad1: i32,
+    grad2: i32,
 ) {
     let cond = CondStmtBase {
         cmpid,
@@ -268,6 +280,8 @@ fn log_cmp(
         lb2,
         arg1,
         arg2,
+        grad1,
+        grad2,
     };
     let mut lcl = LC.lock().expect("Could not lock LC.");
     if let Some(ref mut lc) = *lcl {

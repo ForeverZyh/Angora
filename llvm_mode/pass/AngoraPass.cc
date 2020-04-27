@@ -131,10 +131,10 @@ public:
   void visitCallInst(Instruction *Inst);
   void visitInvokeInst(Instruction *Inst);
   void visitCompareFunc(Instruction *Inst);
-  void visitBranchInst(Instruction *Inst);
-  void visitCmpInst(Instruction *Inst);
-  void processCmp(Instruction *Cond, Constant *Cid, Instruction *InsertPoint);
-  void processBoolCmp(Value *Cond, Constant *Cid, Instruction *InsertPoint);
+  void visitBranchInst(Instruction *Inst, Value *GradInstArg);
+  void visitCmpInst(Instruction *Inst, Value *GradInstArg);
+  void processCmp(Instruction *Cond, Constant *Cid, Instruction *InsertPoint, Value *GradInstArg);
+  void processBoolCmp(Value *Cond, Constant *Cid, Instruction *InsertPoint, Value *GradInstArg);
   void visitSwitchInst(Module &M, Instruction *Inst);
   void visitExploitation(Instruction *Inst);
   void processCall(Instruction *Inst);
@@ -297,8 +297,8 @@ void AngoraLLVMPass::initVariables(Module &M) {
     }
 
   } else if (TrackMode) {
-    Type *TraceCmpTtArgs[7] = {Int32Ty, Int32Ty, Int32Ty, Int32Ty,
-                               Int64Ty, Int64Ty, Int32Ty};
+    Type *TraceCmpTtArgs[9] = {Int32Ty, Int32Ty, Int32Ty, Int32Ty,
+                               Int64Ty, Int64Ty, Int32Ty, Int32Ty, Int32Ty};
     TraceCmpTtTy = FunctionType::get(VoidTy, TraceCmpTtArgs, false);
     TraceCmpTT = M.getOrInsertFunction("__angora_trace_cmp_tt", TraceCmpTtTy);
     if (Function *F = dyn_cast<Function>(TraceCmpTT)) {
@@ -603,7 +603,7 @@ Value *AngoraLLVMPass::castArgType(IRBuilder<> &IRB, Value *V) {
 }
 
 void AngoraLLVMPass::processCmp(Instruction *Cond, Constant *Cid,
-                                Instruction *InsertPoint) {
+                                Instruction *InsertPoint, Value *GradInstArg) {
   CmpInst *Cmp = dyn_cast<CmpInst>(Cond);
   Value *OpArg[2];
   OpArg[0] = Cmp->getOperand(0);
@@ -611,7 +611,7 @@ void AngoraLLVMPass::processCmp(Instruction *Cond, Constant *Cid,
   Type *OpType = OpArg[0]->getType();
   if (!((OpType->isIntegerTy() && OpType->getIntegerBitWidth() <= 64) ||
         OpType->isFloatTy() || OpType->isDoubleTy() || OpType->isPointerTy())) {
-    processBoolCmp(Cond, Cid, InsertPoint);
+    processBoolCmp(Cond, Cid, InsertPoint, GradInstArg);
     return;
   }
   int num_bytes = OpType->getScalarSizeInBits() / 8;
@@ -673,13 +673,13 @@ void AngoraLLVMPass::processCmp(Instruction *Cond, Constant *Cid,
     setInsNonSan(CurCtx);
     CallInst *ProxyCall =
         IRB.CreateCall(TraceCmpTT, {Cid, CurCtx, SizeArg, TypeArg, OpArg[0],
-                                    OpArg[1], CondExt});
+                                    OpArg[1], CondExt, GradInstArg[0], GradInstArg[1]});
     setInsNonSan(ProxyCall);
   }
 }
 
 void AngoraLLVMPass::processBoolCmp(Value *Cond, Constant *Cid,
-                                    Instruction *InsertPoint) {
+                                    Instruction *InsertPoint, Value *GradInstArg) {
   if (!Cond->getType()->isIntegerTy() ||
       Cond->getType()->getIntegerBitWidth() > 32)
     return;
@@ -715,20 +715,20 @@ void AngoraLLVMPass::processBoolCmp(Value *Cond, Constant *Cid,
     setInsNonSan(CurCtx);
     CallInst *ProxyCall =
         IRB.CreateCall(TraceCmpTT, {Cid, CurCtx, SizeArg, TypeArg, OpArg[0],
-                                    OpArg[1], CondExt});
+                                    OpArg[1], CondExt, GradInstArg[0], GradInstArg[1]});
     setInsNonSan(ProxyCall);
   }
 }
 
-void AngoraLLVMPass::visitCmpInst(Instruction *Inst) {
+void AngoraLLVMPass::visitCmpInst(Instruction *Inst, Value *GradInstArg) {
   Instruction *InsertPoint = Inst->getNextNode();
   if (!InsertPoint || isa<ConstantInt>(Inst))
     return;
   Constant *Cid = ConstantInt::get(Int32Ty, getInstructionId(Inst));
-  processCmp(Inst, Cid, InsertPoint);
+  processCmp(Inst, Cid, InsertPoint, GradInstArg);
 }
 
-void AngoraLLVMPass::visitBranchInst(Instruction *Inst) {
+void AngoraLLVMPass::visitBranchInst(Instruction *Inst, Value *GradInstArg) {
   BranchInst *Br = dyn_cast<BranchInst>(Inst);
   if (Br->isConditional()) {
     Value *Cond = Br->getCondition();
@@ -736,7 +736,7 @@ void AngoraLLVMPass::visitBranchInst(Instruction *Inst) {
       if (!isa<CmpInst>(Cond)) {
         // From  and, or, call, phi ....
         Constant *Cid = ConstantInt::get(Int32Ty, getInstructionId(Inst));
-        processBoolCmp(Cond, Cid, Inst);
+        processBoolCmp(Cond, Cid, Inst, GradInstArg);
       }
     }
   }
@@ -909,14 +909,17 @@ bool AngoraLLVMPass::runOnModule(Module &M) {
         OpArg[1] = CmpOp->getOperand(1);
         break; // break, because only one cmp instruction in a BB.
       }
+
+      Value *GradInstArg[2];
+      Type *i32_type = llvm::IntegerType::getInt32Ty(BB->getContext());
+      Constant *i32_val = llvm::ConstantInt::get(i32_type, 0, true);
+      GradInstArg[0] = GradInstArg[1] = i32_val;
+
       if (OpArg[0] != NULL && insertFunc != NULL) 
       // if there is a cmp instruction and we find the insert function.
       {
         CallInst *lastInst = NULL;
-        Value *GradInstArg[2];
-        Type *i32_type = llvm::IntegerType::getInt32Ty(BB->getContext());
-        Constant *i32_val = llvm::ConstantInt::get(i32_type, 0, true);
-        GradInstArg[0] = GradInstArg[1] = i32_val;
+
         // Loop over all instructions in the block.
         for (auto Inst = BB->begin(), IE = BB->end(); Inst != IE; ++Inst) {
           auto *CallOp = dyn_cast<CallInst>(Inst);
@@ -972,11 +975,11 @@ bool AngoraLLVMPass::runOnModule(Module &M) {
         } else if (isa<InvokeInst>(Inst)) {
           visitInvokeInst(Inst);
         } else if (isa<BranchInst>(Inst)) {
-          visitBranchInst(Inst);
+          visitBranchInst(Inst, GradInstArg);
         } else if (isa<SwitchInst>(Inst)) {
           visitSwitchInst(M, Inst);
         } else if (isa<CmpInst>(Inst)) {
-          visitCmpInst(Inst);
+          visitCmpInst(Inst, GradInstArg);
         } else {
           visitExploitation(Inst);
         }
