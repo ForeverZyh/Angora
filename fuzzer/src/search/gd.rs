@@ -248,7 +248,12 @@ impl<'a> GdSearch<'a> {
         i: usize,
         f0: u64,) -> (bool, bool, u64) {
         let (f, g) = self.execute_with_grad(&orig_input);
-        (true, false, g as u64)
+	if (g >= 0) {
+          return (true, false, g as u64)
+	}
+	else {
+	  return (false, false, (-g) as u64)
+	}
     }
 
     fn cal_gradient(&mut self, input: &MutInput, f0: u64, grad: &mut Grad) {
