@@ -11,7 +11,7 @@
 #include "../Int.h"
 
 Int  __attribute__ ((noinline))  foo(Int y) {
-    return y * y * y - 2 * y * y + y * 1 - 100;
+    return y * y - 100 * y + y * 24 - 222;
 }
 
 
@@ -29,7 +29,7 @@ int main (int argc, char** argv) {
     }
 
     int len = 1;
-    int8_t _x = 0;
+    int16_t _x = 0;
     ret = fread(&_x, sizeof _x, 1, fp);
     Int x = Int(_x, 1);
     x.get_dx(-1);
