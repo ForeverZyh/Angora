@@ -9,7 +9,7 @@ Int::Int (int _val, long long _dx): val(_val), dx(_dx) {
 }
 
 long long Int::get_dx(int arg_id) const {
-    printf("Catch grad: %d, when val = %d., cmp at arg_id: %d\n", dx, val, arg_id);
+    printf("Catch grad: %lld, when val = %d., cmp at arg_id: %d\n", dx, val, arg_id);
     return dx;
 }
 
@@ -25,7 +25,7 @@ Int& Int::operator =(const int& b)
 }
 
 Int Int::operator *(const Int&b) const {
-    return Int(val * b.val, val * b.dx + dx * b.val);
+    return Int(val * b.val, b.dx * val + dx * b.val);
 }
 
 Int Int::operator *(const int&b) const {
