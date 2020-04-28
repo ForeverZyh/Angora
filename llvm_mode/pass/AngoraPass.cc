@@ -277,7 +277,7 @@ void AngoraLLVMPass::initVariables(Module &M) {
                            ConstantInt::get(Int32Ty, 0), "__angora_prev_loc", 0,
                            GlobalVariable::GeneralDynamicTLSModel, 0, false);
 
-    Type *TraceCmpArgs[5] = {Int32Ty, Int32Ty, Int32Ty, Int64Ty, Int64Ty};
+    Type *TraceCmpArgs[7] = {Int32Ty, Int32Ty, Int32Ty, Int64Ty, Int64Ty, Int32Ty, Int32Ty};
     TraceCmpTy = FunctionType::get(Int32Ty, TraceCmpArgs, false);
     TraceCmp = M.getOrInsertFunction("__angora_trace_cmp", TraceCmpTy);
     if (Function *F = dyn_cast<Function>(TraceCmp)) {
@@ -654,7 +654,7 @@ void AngoraLLVMPass::processCmp(Instruction *Cond, Constant *Cid,
     LoadInst *CurCtx = ThenB.CreateLoad(AngoraContext);
     setInsNonSan(CurCtx);
     CallInst *ProxyCall =
-        ThenB.CreateCall(TraceCmp, {CondExt, Cid, CurCtx, OpArg[0], OpArg[1]});
+        ThenB.CreateCall(TraceCmp, {CondExt, Cid, CurCtx, OpArg[0], OpArg[1], GradInstArg[0], GradInstArg[1]});
     setInsNonSan(ProxyCall);
   } else if (TrackMode) {
     Value *SizeArg = ConstantInt::get(Int32Ty, num_bytes);
@@ -702,7 +702,7 @@ void AngoraLLVMPass::processBoolCmp(Value *Cond, Constant *Cid,
     LoadInst *CurCtx = ThenB.CreateLoad(AngoraContext);
     setInsNonSan(CurCtx);
     CallInst *ProxyCall =
-        ThenB.CreateCall(TraceCmp, {CondExt, Cid, CurCtx, OpArg[0], OpArg[1]});
+        ThenB.CreateCall(TraceCmp, {CondExt, Cid, CurCtx, OpArg[0], OpArg[1], GradInstArg[0], GradInstArg[1]});
     setInsNonSan(ProxyCall);
   } else if (TrackMode) {
     Value *SizeArg = ConstantInt::get(Int32Ty, 1);

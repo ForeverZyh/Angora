@@ -65,6 +65,20 @@ impl ShmConds {
         condition
     }
 
+    pub fn update_cmp_with_grad(&mut self, condition: u32, arg1: u64, arg2: u64,
+                                grad1: i32, grad2: i32) -> u32 {
+        self.cond.arg1 = arg1;
+        self.cond.arg2 = arg2;
+
+        self.cond.grad1 = grad1;
+        self.cond.grad2 = grad2;
+
+        self.rt_order = 0x8000;
+        self.mark_reachable(condition);
+        set_cmpid(0);
+        condition
+    }
+
     pub fn update_switch(&mut self, condition: u64) -> u64 {
         self.cond.arg1 = condition;
         self.rt_order = 0x8000;
