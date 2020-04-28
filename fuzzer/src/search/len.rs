@@ -24,7 +24,8 @@ impl<'a> LenFuzz<'a> {
         */
         //let offset = self.handler.cond.base.lb1 as usize;
         let size = self.handler.cond.base.lb2 as usize;
-        let (delta, _) = self.handler.cond.base.get_output() as usize;
+        let (delta_u64, _) = self.handler.cond.base.get_output();
+	let delta = delta_u64 as usize;
         let mut buf = self.handler.buf.clone();
         debug!(
             "len: delta {}, size: {}, buf_len: {}",

@@ -131,10 +131,10 @@ public:
   void visitCallInst(Instruction *Inst);
   void visitInvokeInst(Instruction *Inst);
   void visitCompareFunc(Instruction *Inst);
-  void visitBranchInst(Instruction *Inst, Value *GradInstArg);
-  void visitCmpInst(Instruction *Inst, Value *GradInstArg);
-  void processCmp(Instruction *Cond, Constant *Cid, Instruction *InsertPoint, Value *GradInstArg);
-  void processBoolCmp(Value *Cond, Constant *Cid, Instruction *InsertPoint, Value *GradInstArg);
+  void visitBranchInst(Instruction *Inst, Value **GradInstArg);
+  void visitCmpInst(Instruction *Inst, Value **GradInstArg);
+  void processCmp(Instruction *Cond, Constant *Cid, Instruction *InsertPoint, Value **GradInstArg);
+  void processBoolCmp(Value *Cond, Constant *Cid, Instruction *InsertPoint, Value **GradInstArg);
   void visitSwitchInst(Module &M, Instruction *Inst);
   void visitExploitation(Instruction *Inst);
   void processCall(Instruction *Inst);
@@ -603,7 +603,7 @@ Value *AngoraLLVMPass::castArgType(IRBuilder<> &IRB, Value *V) {
 }
 
 void AngoraLLVMPass::processCmp(Instruction *Cond, Constant *Cid,
-                                Instruction *InsertPoint, Value *GradInstArg) {
+                                Instruction *InsertPoint, Value **GradInstArg) {
   CmpInst *Cmp = dyn_cast<CmpInst>(Cond);
   Value *OpArg[2];
   OpArg[0] = Cmp->getOperand(0);
@@ -679,7 +679,7 @@ void AngoraLLVMPass::processCmp(Instruction *Cond, Constant *Cid,
 }
 
 void AngoraLLVMPass::processBoolCmp(Value *Cond, Constant *Cid,
-                                    Instruction *InsertPoint, Value *GradInstArg) {
+                                    Instruction *InsertPoint, Value **GradInstArg) {
   if (!Cond->getType()->isIntegerTy() ||
       Cond->getType()->getIntegerBitWidth() > 32)
     return;
@@ -720,7 +720,7 @@ void AngoraLLVMPass::processBoolCmp(Value *Cond, Constant *Cid,
   }
 }
 
-void AngoraLLVMPass::visitCmpInst(Instruction *Inst, Value *GradInstArg) {
+void AngoraLLVMPass::visitCmpInst(Instruction *Inst, Value **GradInstArg) {
   Instruction *InsertPoint = Inst->getNextNode();
   if (!InsertPoint || isa<ConstantInt>(Inst))
     return;
@@ -728,7 +728,7 @@ void AngoraLLVMPass::visitCmpInst(Instruction *Inst, Value *GradInstArg) {
   processCmp(Inst, Cid, InsertPoint, GradInstArg);
 }
 
-void AngoraLLVMPass::visitBranchInst(Instruction *Inst, Value *GradInstArg) {
+void AngoraLLVMPass::visitBranchInst(Instruction *Inst, Value **GradInstArg) {
   BranchInst *Br = dyn_cast<BranchInst>(Inst);
   if (Br->isConditional()) {
     Value *Cond = Br->getCondition();
@@ -912,13 +912,16 @@ bool AngoraLLVMPass::runOnModule(Module &M) {
 
       Value *GradInstArg[2];
       Type *i32_type = llvm::IntegerType::getInt32Ty(BB->getContext());
-      Constant *i32_val = llvm::ConstantInt::get(i32_type, 0, true);
+      Constant *i32_val = llvm::ConstantInt::get(i32_type, INT_MAX, true); 
+      // we use INT_MAX to denote that we cannot compute the gradient for this value.
       GradInstArg[0] = GradInstArg[1] = i32_val;
 
       if (OpArg[0] != NULL && insertFunc != NULL) 
       // if there is a cmp instruction and we find the insert function.
       {
-        CallInst *lastInst = NULL;
+      	Type *i32_type = llvm::IntegerType::getInt32Ty(BB->getContext());
+      	Constant *i32_val = llvm::ConstantInt::get(i32_type, 0, true);
+      	GradInstArg[0] = GradInstArg[1] = i32_val;
 
         // Loop over all instructions in the block.
         for (auto Inst = BB->begin(), IE = BB->end(); Inst != IE; ++Inst) {
@@ -952,7 +955,6 @@ bool AngoraLLVMPass::runOnModule(Module &M) {
                     Constant *i32_val = llvm::ConstantInt::get(i32_type, arg_id, true);
                     CallInst *GradCall = IRB.CreateCall(insertFunc, {arg, i32_val}); // insert a function call.
                     setInsNonSan(GradCall);
-                    lastInst = GradCall;
                     GradInstArg[arg_id] = GradCall;
                   }
                 }
@@ -960,7 +962,6 @@ bool AngoraLLVMPass::runOnModule(Module &M) {
             }
           }
         }
-        // TODO: Insert a proxy call after the lastInst to send GradInstArg[0..1] to rs
       }
 
       for (auto inst = inst_list.begin(); inst != inst_list.end(); inst++) {
