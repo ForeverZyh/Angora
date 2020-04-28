@@ -277,7 +277,7 @@ void AngoraLLVMPass::initVariables(Module &M) {
                            ConstantInt::get(Int32Ty, 0), "__angora_prev_loc", 0,
                            GlobalVariable::GeneralDynamicTLSModel, 0, false);
 
-    Type *TraceCmpArgs[7] = {Int32Ty, Int32Ty, Int32Ty, Int64Ty, Int64Ty, Int32Ty, Int32Ty};
+    Type *TraceCmpArgs[7] = {Int32Ty, Int32Ty, Int32Ty, Int64Ty, Int64Ty, Int64Ty, Int64Ty};
     TraceCmpTy = FunctionType::get(Int32Ty, TraceCmpArgs, false);
     TraceCmp = M.getOrInsertFunction("__angora_trace_cmp", TraceCmpTy);
     if (Function *F = dyn_cast<Function>(TraceCmp)) {
@@ -298,7 +298,7 @@ void AngoraLLVMPass::initVariables(Module &M) {
 
   } else if (TrackMode) {
     Type *TraceCmpTtArgs[9] = {Int32Ty, Int32Ty, Int32Ty, Int32Ty,
-                               Int64Ty, Int64Ty, Int32Ty, Int32Ty, Int32Ty};
+                               Int64Ty, Int64Ty, Int32Ty, Int64Ty, Int64Ty};
     TraceCmpTtTy = FunctionType::get(VoidTy, TraceCmpTtArgs, false);
     TraceCmpTT = M.getOrInsertFunction("__angora_trace_cmp_tt", TraceCmpTtTy);
     if (Function *F = dyn_cast<Function>(TraceCmpTT)) {
@@ -911,17 +911,17 @@ bool AngoraLLVMPass::runOnModule(Module &M) {
       }
 
       Value *GradInstArg[2];
-      Type *i32_type = llvm::IntegerType::getInt32Ty(BB->getContext());
-      Constant *i32_val = llvm::ConstantInt::get(i32_type, INT_MAX, true); 
+      Type *i64_type = llvm::IntegerType::getInt64Ty(BB->getContext());
+      Constant *i64_val = llvm::ConstantInt::get(i64_type, INT_MAX, true);
       // we use INT_MAX to denote that we cannot compute the gradient for this value.
-      GradInstArg[0] = GradInstArg[1] = i32_val;
+      GradInstArg[0] = GradInstArg[1] = i64_val;
 
       if (OpArg[0] != NULL && insertFunc != NULL) 
       // if there is a cmp instruction and we find the insert function.
       {
-      	Type *i32_type = llvm::IntegerType::getInt32Ty(BB->getContext());
-      	Constant *i32_val = llvm::ConstantInt::get(i32_type, 0, true);
-      	GradInstArg[0] = GradInstArg[1] = i32_val;
+      	Type *i64_type = llvm::IntegerType::getInt64Ty(BB->getContext());
+      	Constant *i64_val = llvm::ConstantInt::get(i64_type, 0, true);
+      	GradInstArg[0] = GradInstArg[1] = i64_val;
 
         // Loop over all instructions in the block.
         for (auto Inst = BB->begin(), IE = BB->end(); Inst != IE; ++Inst) {

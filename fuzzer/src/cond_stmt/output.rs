@@ -7,12 +7,12 @@ use std;
 
 const EPS: u64 = 1;
 pub trait CondOutput {
-    fn get_output(&self) -> (u64, i32);
+    fn get_output(&self) -> (u64, i64);
 }
 
 impl CondOutput for CondStmtBase {
     // relu
-    fn get_output(&self) -> (u64, i32) {
+    fn get_output(&self) -> (u64, i64) {
         let mut a = self.arg1;
         let mut b = self.arg2;
 

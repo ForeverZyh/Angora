@@ -65,7 +65,7 @@ impl<'a> SearchHandler<'a> {
         self.process_status(status);
     }
 
-    pub fn execute_cond_with_grad(&mut self, input: &MutInput) -> (u64, i32) {
+    pub fn execute_cond_with_grad(&mut self, input: &MutInput) -> (u64, i64) {
         input.write_to_input(&self.cond.offsets, &mut self.buf);
         let (status, f_output, grad) = self.executor.run_with_cond(&self.buf, self.cond);
         self.process_status(status);

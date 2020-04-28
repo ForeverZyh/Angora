@@ -27,7 +27,7 @@ impl<'a> GdSearch<'a> {
         f
     }
 
-    fn execute_with_grad(&mut self, input: &MutInput) -> (u64, i32) {
+    fn execute_with_grad(&mut self, input: &MutInput) -> (u64, i64) {
         if self.handler.skip {
             return (self.handler.executor.last_f, 0);
         }
@@ -248,12 +248,12 @@ impl<'a> GdSearch<'a> {
         i: usize,
         f0: u64,) -> (bool, bool, u64) {
         let (f, g) = self.execute_with_grad(&orig_input);
-	if (g >= 0) {
-          return (true, false, g as u64)
-	}
-	else {
-	  return (false, false, (-g) as u64)
-	}
+        if g >= 0 {
+              return (true, false, g as u64)
+        }
+        else {
+          return (false, false, (-g) as u64)
+        }
     }
 
     fn cal_gradient(&mut self, input: &MutInput, f0: u64, grad: &mut Grad) {
@@ -268,9 +268,9 @@ impl<'a> GdSearch<'a> {
             let (mut s, mut l, mut f) = self.partial_derivative_ad(input, i, f0);
             if f == std::i32::MAX as u64 { // if AD cannot compute the derivative
                 let (_s, _l, _f) = self.partial_derivative(input, i, f0);
-		s = _s;
-		l = _l;
-		f = _f; //destructuring assignments are awkward.
+                s = _s;
+                l = _l;
+                f = _f; //destructuring assignments are awkward.
             }
             if f > max {
                 max = f;

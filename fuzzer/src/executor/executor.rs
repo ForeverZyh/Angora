@@ -173,7 +173,7 @@ impl Executor {
         &mut self,
         buf: &Vec<u8>,
         cond: &mut cond_stmt::CondStmt,
-    ) -> (StatusType, u64, i32) {
+    ) -> (StatusType, u64, i64) {
         self.run_init();
         self.t_conds.set(cond);
         let mut status = self.run_inner(buf);

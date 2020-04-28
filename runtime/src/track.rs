@@ -35,8 +35,8 @@ pub extern "C" fn __angora_trace_cmp_tt(
     _e: u64,
     _f: u64,
     _g: u32,
-    _h: i32,
-    _i: i32,
+    _h: i64,
+    _i: i64,
 ) {
     panic!("Forbid calling __angora_trace_cmp_tt directly");
 }
@@ -50,8 +50,8 @@ pub extern "C" fn __dfsw___angora_trace_cmp_tt(
     arg1: u64,
     arg2: u64,
     condition: u32,
-    grad1: i32,
-    grad2: i32,
+    grad1: i64,
+    grad2: i64,
     _l0: DfsanLabel,
     _l1: DfsanLabel,
     _l2: DfsanLabel,
@@ -264,8 +264,8 @@ fn log_cmp(
     lb2: u32,
     arg1: u64,
     arg2: u64,
-    grad1: i32,
-    grad2: i32,
+    grad1: i64,
+    grad2: i64,
 ) {
     let cond = CondStmtBase {
         cmpid,

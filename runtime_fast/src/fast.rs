@@ -21,8 +21,8 @@ pub extern "C" fn __angora_trace_cmp(
     arg1: u64,
     arg2: u64,
 
-    grad1: i32,
-    grad2: i32,
+    grad1: i64,
+    grad2: i64,
 
 ) -> u32 {
     let mut conds = shm_conds::SHM_CONDS.lock().expect("SHM mutex poisoned.");

@@ -66,7 +66,7 @@ impl ShmConds {
     }
 
     pub fn update_cmp_with_grad(&mut self, condition: u32, arg1: u64, arg2: u64,
-                                grad1: i32, grad2: i32) -> u32 {
+                                grad1: i64, grad2: i64) -> u32 {
         self.cond.arg1 = arg1;
         self.cond.arg2 = arg2;
 

@@ -20,8 +20,8 @@ pub struct CondStmtBase {
     pub arg1: u64,
     pub arg2: u64,
 
-    pub grad1: i32,
-    pub grad2: i32,
+    pub grad1: i64,
+    pub grad2: i64,
 }
 
 /*
