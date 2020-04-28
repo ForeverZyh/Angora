@@ -343,7 +343,7 @@ impl<'a> GdSearch<'a> {
                 // until the gradient is not work
                 // or f_new > f_last
                 if f_new >= f_last {
-                    if f_new == std::u64::MAX || rng.gen_bool(config::GD_ESCAPE_RATIO) {
+                    if f_new == std::u64::MAX || rng.gen_bool(0.5) {
                         break;
                     }
                 }
