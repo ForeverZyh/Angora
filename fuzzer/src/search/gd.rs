@@ -249,10 +249,10 @@ impl<'a> GdSearch<'a> {
         f0: u64,) -> (bool, bool, u64) {
         let (f, g) = self.execute_with_grad(&orig_input);
         if g >= 0 {
-              return (true, false, g as u64)
+              return (false, false, g as u64)
         }
         else {
-          return (false, false, (-g) as u64)
+          return (true, false, (-g) as u64)
         }
     }
 
