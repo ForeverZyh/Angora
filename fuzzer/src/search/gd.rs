@@ -27,6 +27,15 @@ impl<'a> GdSearch<'a> {
         f
     }
 
+    fn execute_with_grad(&mut self, input: &MutInput) -> (u64, i32) {
+        if self.handler.skip {
+            return (self.handler.executor.last_f, 0);
+        }
+        debug!("input : {:?}", input);
+        let (f, g) = self.handler.execute_cond_with_grad(input);
+        (f, g)
+    }
+
     fn random_fuzz<T: Rng>(&mut self, rng: &mut T) {
         let mut fmin = std::u64::MAX;
         let mut input = self.handler.get_f_input();
@@ -234,6 +243,14 @@ impl<'a> GdSearch<'a> {
         }
     }
 
+    fn partial_derivative_ad(&mut self,
+        orig_input: &MutInput,
+        i: usize,
+        f0: u64,) -> (bool, bool, u64) {
+        let (f, g) = self.execute_with_grad(&input);
+        (true, false, g)
+    }
+
     fn cal_gradient(&mut self, input: &MutInput, f0: u64, grad: &mut Grad) {
         debug!("start calculate gradient.. input {:?}, f0 {:?}", input, f0);
         // let mut grad = Grad::new(input.len());
@@ -243,7 +260,10 @@ impl<'a> GdSearch<'a> {
             if self.handler.is_stopped_or_skip() {
                 break;
             }
-            let (s, l, f) = self.partial_derivative(input, i, f0);
+            let (s, l, f) = self.partial_derivative_ad(input, i, f0);
+            if f == 0 {
+                (s, l, f) = self.partial_derivative(input, i, f0);
+            }
             if f > max {
                 max = f;
             }

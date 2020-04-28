@@ -65,16 +65,24 @@ impl<'a> SearchHandler<'a> {
         self.process_status(status);
     }
 
+    pub fn execute_cond_with_grad(&mut self, input: &MutInput) -> (u64, i32) {
+        input.write_to_input(&self.cond.offsets, &mut self.buf);
+        let (status, f_output, grad) = self.executor.run_with_cond(&self.buf, self.cond);
+        self.process_status(status);
+        // output will be u64::MAX if unreachable, including timeout and crash
+        (f_output, grad)
+    }
+
     pub fn execute_cond(&mut self, input: &MutInput) -> u64 {
         input.write_to_input(&self.cond.offsets, &mut self.buf);
-        let (status, f_output) = self.executor.run_with_cond(&self.buf, self.cond);
+        let (status, f_output, _) = self.executor.run_with_cond(&self.buf, self.cond);
         self.process_status(status);
         // output will be u64::MAX if unreachable, including timeout and crash
         f_output
     }
 
     pub fn execute_cond_direct(&mut self) -> u64 {
-        let (status, f_output) = self.executor.run_with_cond(&self.buf, self.cond);
+        let (status, f_output, _) = self.executor.run_with_cond(&self.buf, self.cond);
         self.process_status(status);
         f_output
     }

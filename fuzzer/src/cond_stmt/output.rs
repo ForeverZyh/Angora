@@ -7,14 +7,17 @@ use std;
 
 const EPS: u64 = 1;
 pub trait CondOutput {
-    fn get_output(&self) -> u64;
+    fn get_output(&self) -> (u64, i32);
 }
 
 impl CondOutput for CondStmtBase {
     // relu
-    fn get_output(&self) -> u64 {
+    fn get_output(&self) -> (u64, i32) {
         let mut a = self.arg1;
         let mut b = self.arg2;
+
+        let mut grad_a = self.grad1;
+        let mut grad_b = self.grad2;
 
         if self.is_signed() {
             a = translate_signed_value(a, self.size);
@@ -47,69 +50,74 @@ impl CondOutput for CondStmtBase {
         // RELU: if f <= 0, we set f = 0.
         // In other words, if we reach our goal, f = 0.
 
-        let output = match op {
+        let (output, grad) = match op {
             defs::COND_ICMP_EQ_OP => {
                 // a == b : f = abs(a - b)
-                sub_abs(a, b)
+                //sub_abs(a, b);
+                if a < b {
+                    (b - a, grad_b - grad_a)
+                } else {
+                    (a - b, grad_a - grad_b)
+                }
             },
             defs::COND_ICMP_NE_OP => {
                 // a != b :
                 // f = 0 if a != b, and f = 1 if a == b
                 if a == b {
-                    1
+                    (1, grad_a - grad_b)
                 } else {
-                    0
+                    (0, grad_a - grad_b)
                 }
             },
             defs::COND_ICMP_SGT_OP | defs::COND_ICMP_UGT_OP => {
                 // a > b :
                 // f = 0 if a > b, and f = b - a + e if a <= b
                 if a > b {
-                    0
+                    (0, grad_b - grad_a)
                 } else {
-                    b - a + EPS
+                    (b - a + EPS, grad_b - grad_a)
                 }
             },
             defs::COND_ICMP_UGE_OP | defs::COND_ICMP_SGE_OP => {
                 // a > = b
                 // f = 0 if a >= b, and f = b - a if a < b
                 if a >= b {
-                    0
+                    (0, grad_b - grad_a)
                 } else {
-                    b - a
+                    (b - a, grad_b - grad_a)
                 }
             },
             defs::COND_ICMP_ULT_OP | defs::COND_ICMP_SLT_OP => {
                 // a < b :
                 // f = 0 if a < b, and f = a - b + e if a >= b
                 if a < b {
-                    0
+                    (0, grad_a - grad_b)
                 } else {
-                    a - b + EPS
+                    (a - b + EPS, grad_a - grad_b)
                 }
             },
             defs::COND_ICMP_ULE_OP | defs::COND_ICMP_SLE_OP => {
                 // a < = b
                 // f = 0 if a <= b, and f = a - b if a > b
                 if a <= b {
-                    0
+                    (0, grad_a - grad_b)
                 } else {
-                    a - b
+                    (a - b, grad_a - grad_b)
                 }
             },
             _ => {
                 //TODO : support float.
                 // if self.is_float() {
-                sub_abs(a, b)
+                (sub_abs(a, b), grad_a - grad_b)
             },
         };
 
         debug!(
-            "id: {}, op: {} -> {}, size:{}, condition: {}, arg(0x{:x} 0x{:x}), output: {}",
-            self.cmpid, self.op, op, self.size, self.condition, a, b, output
+            "id: {}, op: {} -> {}, size:{}, condition: {}, arg(0x{:x} 0x{:x}), output: {}, grad: {}",
+            self.cmpid, self.op, op, self.size, self.condition, a, b, output, grad
         );
 
-        output
+        (output, grad)
     }
 }
 

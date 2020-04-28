@@ -58,15 +58,15 @@ impl ShmConds {
         self.set_len(0);
     }
 
-    pub fn get_cond_output(&self) -> u64 {
+    pub fn get_cond_output(&self) -> (u64, i32) {
         if !self.is_cond_reachable() {
             debug!("unreachable, output is MAX");
-            return defs::UNREACHABLE;
+            return (defs::UNREACHABLE, 0);
         }
-        let mut output = self.cond.get_output();
+        let (mut output, mut grad) = self.cond.get_output();
         if output == defs::UNREACHABLE {
             output -= 1;
         }
-        output
+        (output, grad)
     }
 }

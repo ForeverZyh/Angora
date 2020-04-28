@@ -173,12 +173,12 @@ impl Executor {
         &mut self,
         buf: &Vec<u8>,
         cond: &mut cond_stmt::CondStmt,
-    ) -> (StatusType, u64) {
+    ) -> (StatusType, u64, i32) {
         self.run_init();
         self.t_conds.set(cond);
         let mut status = self.run_inner(buf);
 
-        let output = self.t_conds.get_cond_output();
+        let (output, grad) = self.t_conds.get_cond_output();
         let mut explored = false;
         let mut skip = false;
         skip |= self.check_explored(cond, status, output, &mut explored);
@@ -192,7 +192,7 @@ impl Executor {
             status = StatusType::Skip;
         }
 
-        (status, output)
+        (status, output, grad)
     }
 
     fn try_unlimited_memory(&mut self, buf: &Vec<u8>, cmpid: u32) -> bool {
