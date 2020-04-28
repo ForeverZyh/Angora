@@ -11,7 +11,7 @@
 #include "../Int.h"
 
 Int  __attribute__ ((noinline))  foo(Int y) {
-    return y * y - 100 * y + y * 24 - 222;
+    return y * y * y - 2 * y * y + y * 1 - 100;
 }
 
 

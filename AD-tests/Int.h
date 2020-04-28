@@ -1,11 +1,11 @@
 class Int {
 private:
     int val;
-    int dx;
+    long long dx;
 public:
     Int (int);
-    Int (int, int);
-    int get_dx(int) const;
+    Int (int, long long);
+    long long get_dx(int) const;
     operator int();
     Int& operator=(const int&);
     Int operator *(const Int&) const;
