@@ -9,8 +9,8 @@ Int::Int (int _val, long long _dx): val(_val), dx(_dx) {
 }
 
 long long Int::get_dx(int arg_id) const {
-    printf("Catch grad: %lld, when val = %d., cmp at arg_id: %d\n", dx, val, arg_id);
-    return dx;
+    // printf("Catch grad: %lld, when val = %d., cmp at arg_id: %d\n", dx, val, arg_id);
+    return long long(dx);
 }
 
 Int::operator int() {
@@ -58,4 +58,16 @@ Int Int::operator -(const int&b) const {
 
 Int operator -(const int&a, const Int&b) {
     return Int(a - b.val, -b.dx); // sub does not commute
+}
+
+Int Int::operator /(const Int&b) const {
+    return Int(val / b.val, (dx * b.val - val * b.dx) / b.val / b.val);
+}
+
+Int Int::operator /(const int&b) const {
+    return Int(val / b, dx / b);
+}
+
+Int operator -(const int&a, const Int&b) {
+    return Int(a / b.val, - a * b.dx / b.val / b.val); // divide does not commute
 }

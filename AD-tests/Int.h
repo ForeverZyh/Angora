@@ -1,7 +1,7 @@
 class Int {
 private:
     int val;
-    long long dx;
+    double dx;
 public:
     Int (int);
     Int (int, long long);
@@ -17,4 +17,7 @@ public:
     Int operator -(const Int&) const;
     Int operator -(const int&) const;
     friend Int operator -(const int&, const Int&);
+    Int operator /(const Int&) const;
+    Int operator /(const int&) const;
+    friend Int operator /(const int&, const Int&);
 };
