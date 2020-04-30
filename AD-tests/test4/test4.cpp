@@ -10,8 +10,9 @@
 
 #include "../Int.h"
 
-Int  __attribute__ ((noinline))  foo(Int y) {
-    return y * 24 - 222 + y / 100 + 123456 / y;
+
+Int  __attribute__ ((noinline))  foo(Int x, Int y) {
+    return x * y + 123 * x * y * y - 321 * y;
 }
 
 
@@ -40,7 +41,8 @@ int main (int argc, char** argv) {
     }
 
     int d = x + 10;
-    if (foo(x) < 125963 && foo(x) > 120000)  {
+    if (foo(x + 10, 100 / (x + 3)) < 125963 
+	&& foo(x + 10, 100 / (x + 3)) > 120000)  {
           abort();
     }
 
