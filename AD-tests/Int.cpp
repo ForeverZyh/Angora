@@ -1,20 +1,20 @@
 #include "stdio.h"
 #include "Int.h"
 
-Int::Int (int _val): val(_val) {
+Int::Int (long long _val): val(_val) {
     dx = 0;
 }
 
-Int::Int (int _val, long long _dx): val(_val), dx(_dx) {
+Int::Int (long long _val, long long _dx): val(_val), dx(_dx) {
 }
 
 long long Int::get_dx(int arg_id) const {
     // printf("Catch grad: %lld, when val = %d., cmp at arg_id: %d\n", dx, val, arg_id);
-    return long long(dx);
+    return (long long)dx;
 }
 
 Int::operator int() {
-    return val;
+    return (int)val;
 }   
 
 Int& Int::operator =(const int& b)
@@ -68,6 +68,6 @@ Int Int::operator /(const int&b) const {
     return Int(val / b, dx / b);
 }
 
-Int operator -(const int&a, const Int&b) {
+Int operator /(const int&a, const Int&b) {
     return Int(a / b.val, - a * b.dx / b.val / b.val); // divide does not commute
 }

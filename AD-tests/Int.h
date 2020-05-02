@@ -1,10 +1,10 @@
 class Int {
 private:
-    int val;
+    long long val;
     double dx;
 public:
-    Int (int);
-    Int (int, long long);
+    Int (long long);
+    Int (long long, long long);
     long long get_dx(int) const;
     operator int();
     Int& operator=(const int&);

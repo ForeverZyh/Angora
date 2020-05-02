@@ -35,13 +35,14 @@ int main (int argc, char** argv) {
     }
 
     Int ans = 1;
-    while (x > 0)
+    Int tmp = x;
+    for (int i = 0; i < 20; i++)
     {
-        ans = ans + x - x / 2 * 3;
+        ans = ans - x + x / 4 * 5;
         x = x / 2;
     }
 
-    if (ans > 20)
+    if (ans < 10000 && tmp > 12000)
     {
         abort();
     }
