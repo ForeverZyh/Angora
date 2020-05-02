@@ -43,12 +43,12 @@ int main (int argc, char** argv) {
             return 0;
     }
 
-    int d = x + 10;
+    Int d = x + 10;
     // foo(12345) = 296191
     // bar(12345) = foo(432918) = 10394139
-    int tmp = bar(d);
-    int t1 = foo(x);
-    if (t1 * 36 > tmp && t1 * 35 < tmp)
+    Int tmp = bar(d);
+    Int t1 = foo(x);
+    if (tmp < 11000000 && t1 * 36 > tmp && t1 * 35 + 20000 < tmp && t1 > 290000)
     {    
         abort();
     }

@@ -43,7 +43,7 @@ int main (int argc, char** argv) {
             return 0;
     }
 
-    int d = x + 10;
+    Int d = x + 10;
     if (d > 100)
     {    
         if (foo(x) < 125963 && foo(x) > 120000)  {

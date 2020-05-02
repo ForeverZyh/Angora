@@ -4,7 +4,7 @@ private:
     double dx;
 public:
     Int (long long);
-    Int (long long, long long);
+    Int (long long, double);
     long long get_dx(int) const;
     operator int();
     Int& operator=(const int&);
