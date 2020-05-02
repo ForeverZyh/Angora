@@ -40,10 +40,11 @@ int main (int argc, char** argv) {
             return 0;
     }
 
-    Int d = x + 10;
+    Int d = 1;
+    for (int i = 0; i < x; i++) d = d * (x - i); 
     if (d < 1000)
     {
-        if (foo(d, 100 / (x + 3)) < 125963 
+        if (foo(d, 100 / (x + 3)) < 200000 
             && foo(d, 100 / (x + 3)) > 120000)  {
             abort();
         }

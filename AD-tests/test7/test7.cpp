@@ -10,12 +10,6 @@
 
 #include "../Int.h"
 
-
-Int  __attribute__ ((noinline))  foo(Int x, Int y) {
-    return x * y + 123 * x * y * y - 321 * y;
-}
-
-
 int main (int argc, char** argv) {
     if (argc < 2) return 0;
 
@@ -40,13 +34,16 @@ int main (int argc, char** argv) {
             return 0;
     }
 
-    Int d = x + 10;
-    if (d < 1000)
+    Int ans = 1;
+    while (x > 0)
     {
-        if (foo(d, 100 / (x + 3)) < 125963 
-            && foo(d, 100 / (x + 3)) > 120000)  {
-            abort();
-        }
+        ans = ans + x - x / 2 * 3;
+        x = x / 2;
+    }
+
+    if (ans > 20)
+    {
+        abort();
     }
 
     return 0;

@@ -15,6 +15,12 @@ Int  __attribute__ ((noinline))  foo(Int x, Int y) {
     return x * y + 123 * x * y * y - 321 * y;
 }
 
+Int __attribute__ ((noinline))  factor(Int x) {
+    if (x == 1)
+        return x;
+    else 
+        return x * factor(x - 1);
+}
 
 int main (int argc, char** argv) {
     if (argc < 2) return 0;
@@ -40,10 +46,10 @@ int main (int argc, char** argv) {
             return 0;
     }
 
-    Int d = x + 10;
+    Int d = factor(x);
     if (d < 1000)
     {
-        if (foo(d, 100 / (x + 3)) < 125963 
+        if (foo(d, 100 / (x + 3)) < 200000 
             && foo(d, 100 / (x + 3)) > 120000)  {
             abort();
         }

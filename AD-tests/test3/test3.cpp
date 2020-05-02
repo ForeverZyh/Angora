@@ -40,13 +40,10 @@ int main (int argc, char** argv) {
             return 0;
     }
 
-    Int d = x + 10;
-    if (d < 1000)
-    {
-        if (foo(d, 100 / (x + 3)) < 125963 
-            && foo(d, 100 / (x + 3)) > 120000)  {
-            abort();
-        }
+    int d = x + 10;
+    if (foo(x + 10, 100 / (x + 3)) < 125963 
+	&& foo(x + 10, 100 / (x + 3)) > 120000)  {
+          abort();
     }
 
     return 0;
