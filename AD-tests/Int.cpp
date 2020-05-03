@@ -1,7 +1,7 @@
 #include "stdio.h"
 #include "Int.h"
 
-static double EPS = 1e-8;
+static double EPS = 1e-1;
 
 Int::Int (long long _val): val(_val) {
     dx = 0;
@@ -12,9 +12,9 @@ Int::Int (long long _val, double _dx): val(_val), dx(_dx) {
 
 long long Int::get_dx(int arg_id) const {
     printf("Catch grad: %lf, when val = %lld., cmp at arg_id: %d\n", dx, val, arg_id);
-    //if (dx <= EPS && dx >= -EPS) return 0;
-    //if (dx <= 1 && dx > EPS) return 1;
-    //if (dx >= -1 && dx < -EPS) return -1;
+    if (dx <= EPS && dx >= -EPS) return 0;
+    if (dx <= 1 && dx > EPS) return 1;
+    if (dx >= -1 && dx < -EPS) return -1;
     return (long long)dx;
 }
 

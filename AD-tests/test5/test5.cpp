@@ -41,7 +41,7 @@ int main (int argc, char** argv) {
     }
 
     Int d = 1;
-    for (int i = 0; i < x; i++) d = d * (x - i); 
+    for (int i = 0; i < 10; i++) d = d + (x - i); 
     if (d < 1000)
     {
         if (foo(d, 100 / (x + 3)) < 200000 

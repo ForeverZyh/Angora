@@ -41,7 +41,7 @@ int main (int argc, char** argv) {
     }
 
     Int d = x + 10;
-    if (d < 1000)
+    if (d * d < 1000)
     {
         if (foo(d, 100 / (x + 3)) < 125963 
             && foo(d, 100 / (x + 3)) > 120000)  {
