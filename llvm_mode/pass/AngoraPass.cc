@@ -881,6 +881,7 @@ bool AngoraLLVMPass::runOnModule(Module &M) {
   for (auto &F : M) {
     if (F.isDeclaration() || F.getName().startswith(StringRef("asan.module")))
       continue;
+    if (F.getName().contains("get_dx")) continue;
 
     addFnWrap(F);
 
